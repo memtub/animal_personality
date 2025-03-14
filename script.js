@@ -1,15 +1,34 @@
 // Initialize webcam
 async function initWebcam() {
     const video = document.getElementById('webcam-bg');
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
+        const constraints = {
+            video: {
                 facingMode: 'user',
                 width: { ideal: window.innerWidth },
-                height: { ideal: window.innerHeight }
-            } 
-        });
+                height: { ideal: window.innerHeight },
+                // Add specific mobile constraints
+                ...(isMobile && {
+                    width: { min: 240, ideal: 720, max: 1280 },
+                    height: { min: 240, ideal: 1280, max: 1280 },
+                    facingMode: 'user',
+                    zoom: 1,
+                    aspectRatio: window.innerHeight / window.innerWidth
+                })
+            }
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
+
+        // Handle mobile video sizing
+        if (isMobile) {
+            video.style.width = '100vw';
+            video.style.height = '100vh';
+            video.style.objectFit = 'cover';
+        }
     } catch (err) {
         console.error("Error accessing webcam:", err);
         // If webcam fails, set a fallback background color
